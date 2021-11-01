@@ -1,7 +1,7 @@
 ---
 title: "index"
-author: "Farzad Sunavala"
-date: "10/31/2021"
+author: "Laura Maria Cajiao Gonzalez, Arthur Morales, Richa Sirohi, Farzad Sunavala"
+date: "11/01/2021"
 output:
   html_document:
     fig_caption: yes
