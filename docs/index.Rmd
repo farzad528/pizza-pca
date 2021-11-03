@@ -180,3 +180,5 @@ table(df$brand)
 Notice, that they are ids that are clearly duplicated which could cause a problem in our dataset. They are 291 unique ids but 300 observations in our dataset. 
 
 ## Principal Component Analysis
+
+## Clustering
