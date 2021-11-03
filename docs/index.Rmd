@@ -1,5 +1,5 @@
 ---
-title: "Unit 1-5 Project"
+title: "index"
 author: "Laura Maria Cajiao Gonzalez, Arthur Morales, Richa Sirohi, Farzad Sunavala"
 date: "11/01/2021"
 output:
