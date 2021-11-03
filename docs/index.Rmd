@@ -1,5 +1,5 @@
 ---
-title: "index"
+title: "Unit 1-5 Project"
 author: "Laura Maria Cajiao Gonzalez, Arthur Morales, Richa Sirohi, Farzad Sunavala"
 date: "11/01/2021"
 output:
@@ -15,22 +15,168 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Executive Summary
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Our team includes members with various backgrounds including, energy, technology, aeronautics, and military services. One thing we all have in common is a love for food. We decided to use our knowledge of data analytics to perform a PCA and Clustering analysis on one of our most common favorite foods, pizza. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+The dataset source comes from [dataworld](https://data.world/sdhilip/pizza-datasets).The business problem we are trying to solve is: 
 
-```{r cars}
-summary(cars)
+>"Does the proportion of nutrients in pizza affect the brand of pizza?" 
+
+We compiled a data dictionary to provide more insight about the dataset below:
+
+The purpose of this exercise was three-fold:
+
+1. **Descriptive Statistics** - Perform various data visualizations to further understand and explore our dataset.
+
+2.  **PCA** - Perform PCA in order to reduce dimensionality by using each data point onto only the first few principal components to obtain lower-dimensional data while keeping as much of the data’s variation as possible.
+
+3. **Clustering** - Perform data segmentation that partitions the data into several groups based on their similarity.
+
+#### Conclusions: 
+
+1. The dataset was overall a clean multivariate normally distributed with no outliers, null values, and little correlation between independent variables. We did have to convert 'brand' from numeric to factor since it was categorical data.
+
+2. The PCA found that the amount of variability in the dataset was good.
+
+3. Clustering with Kmeans had good scores when the number of clusters approximated those of the types of pizza, although the evaluation metrics (silhouette and inertia) are low. In general, the algorithms for clustering don't seem to clearly find similar object classes, without a priori knowledge of them (e.g., pizza types). 
+
+## Descriptive Statistics
+#### Load Packages
+```{r echo=TRUE, eval=FALSE}
+library(ggplot2)
+library(factoextra)
+library(FactoMineR)
+library(corrplot)
+library(e1071)
+library(caret)
+library(cluster)
+library(MASS)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+#### Load Dataset
+```{r cache=TRUE}
+df <- read.csv("../Pizza.csv")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#### Sumarize Data
+Let's display the first 10 rows of data to review and think about.
+``` {r cache=TRUE}
+# display first 10 rows of data
+head(df, n=10)
+```
+How much data do we have? We have a general idea, but it is better to have a precise figure. If we have a lot of instances, we may need to work with a smaller sample of our data so that modeling is computationally tractable. If we have a vast number of attributes, we may need to select those that are most relevant. If we have more attributes than instances, we may need to select specific modeling techniques.
+``` {r cache=TRUE}
+# display the dimensions of the dataset
+dim(df)
+```
+We also need t know the types of the attributes in our data. The types will indicate the types of further analysis, types of visualization and even the types of machine learning algorithms that we can use. However, for the scope of this project, we will not be doing any machine learning but solely exploratory analysis.
+``` {r cache=TRUE}
+# list types for each attribute
+sapply(df, class)
+```
+We could also look at a summary for each attribute in our data. Note that factors are described as counts next to each class lable and numerical attributes are described using the min, 25th percentile, median, mean, 75th, percentile, and max properties. 
+``` {r cache=TRUE}
+# summarize the dataset
+summary(df)
+```
+One thing that could help us tell if the data has a Gaussian (or nearly Gaussian) distribution if looking at the standard deviation. This could also help us in outlier detection if any values are more than 3 times the standard deviation from the mean are outside of 99.7% of the data. However, we will not use this method for outlier detection and will focus on that later.
+``` {r cache=TRUE}
+# calculate standard deviation for all numeric attributes
+sapply(df[,3:9], sd)
+```
+If a distribution looks nearly-Gaussian but is pushed far left or right it is useful to know the skew. It's easier to tell skewness from plots such as histograms, but let's do a quick calculation. 
+``` {r cache=TRUE}
+# calculate standard deviation for all numeric attributes
+skew <- apply(df[,3:9], 2, skewness)
+print(skew)
+```
+It's also important to observe and think how attributes relate to each other. For numeric attributes, an excellent way to think about attribute-to attribute interactions is to calculate correlations for each pair of attributes.
+``` {r cache=TRUE}
+# calculate a correlation matrix for numeric variables
+correlations <- cor(df[,3:9])
+# dispaly the correlation matrix
+print(correlations)
+```
+The above table shows all paris of attribute correlations for numerical data. For our case, let's use a threshold of above 0.8 and below -0.8 are watch points as they show a high correlation or high negative correlation respectively. 
+
+#### Data Visualizations
+Histograms are useful to get an indication of the distribution of an attribute. 
+Density plots are also useful as they give a more abstract depiction of the distribution of each variable.
+Box and whisker plots is a good way to look at outliers and the middle 50% of the data.
+Bar plots are useful for showing a proportion of instances that belong to each category. In our case our categorical variable is the pizza brand. 
+``` {r cache=TRUE}
+# histograms
+par(mfrow=c(3,3))
+for(i in 3:9) {
+  hist(df[,i], main=names(df)[i])
+}
+```
+``` {r cache=TRUE}
+# density plots
+par(mfrow=c(3,3))
+for(i in 3:9) {
+  plot(density(df[,i]), main=names(df)[i])
+}
+```
+``` {r cache=TRUE}
+# box and whisker plots
+par(mfrow=c(3,3))
+for(i in 3:9) {
+  boxplot(df[,i], main=names(df)[i])
+}
+```
+``` {r cache=TRUE}
+# bar plots for categorical 
+par(mfrow=c(1,1))
+for(i in 1:1) {
+  counts <- table(df[,i])
+  name <- names(df)[i]
+  barplot(counts, main=name)
+}
+```
+
+Multivariate plots are plots of the relationship or interaction between attributes. This will help in understanding more about the distribution, central tendency, and spread over groups of data.
+
+We took a look at the correlations when summarizing our data, let's now create a correlation plot. 
+``` {r cache=TRUE}
+# multivariate, lets try correlation plot
+corrplot(correlations, method="circle")
+```
+A scatter plot plots two variables together showing the relationship between the two.Let's create a scatter plot for all pairs of attributes in our dataset. We can also view a scatter plot matrix colored by class/brand.
+``` {r cache=TRUE}
+# need to convert classes to categorical factors 
+df <- read.csv("../Pizza.csv", stringsAsFactors = TRUE)
+# scatter plot matrix and wo/class
+pairs(df)
+# scatter plot matrix and w/class
+pairs(brand~., data=df, col=df$brand)
+```
+Similarly, let's create a density plot by class to review the density distribution. 
+``` {r cache=TRUE}
+# density plot w/class
+x <- df[,3:9]
+y <- df[,1]
+scales <- list(x=list(relation="free"), y=list(relation="free"))
+featurePlot(x=x, y=y, plot="density", scales=scales)
+```
+Lastly, let's review the boxplot distriubtions of each attribute by class value. This can give us a different perspective of how each attribute relates to the class value.
+``` {r cache=TRUE}
+# box and whisker plot w/class
+x <- df[,3:9]
+y <- df[,1]
+featurePlot(x=x, y=y, plot="box")
+```
+
+Something we noticed was that there are multiple rows with the same brand name. This could be problematic in our PCA analysis. Let's quickly take a look at the unique values. 
+``` {r cache=TRUE}
+classes <- unique(df$brand, incomparables = FALSE)
+uids <- unique(df$id, incomparables = FALSE)
+print(classes)
+length(uids)
+# get the count of the unique values for pizza brand
+table(df$brand)
+```
+Notice, that they are ids that are clearly duplicated which could cause a problem in our dataset. They are 291 unique ids but 300 observations in our dataset. 
+
+## Principal Component Analysis

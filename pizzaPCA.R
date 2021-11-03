@@ -8,6 +8,10 @@ library(caret)
 library(cluster)
 library(MASS)
 
+#############################################################
+## Data Visualization
+#############################################################
+
 # load dataset
 df <- read.csv("Pizza.csv")
 
@@ -43,7 +47,7 @@ for(i in 3:9) {
 }
 
 # bar plots for categorical 
-par(mfrow=c(3,3))
+par(mfrow=c(1,1))
 for(i in 1:1) {
   counts <- table(df[,i])
   name <- names(df)[i]
@@ -66,7 +70,7 @@ y <- df[,1]
 scales <- list(x=list(relation="free"), y=list(relation="free"))
 featurePlot(x=x, y=y, plot="density", scales=scales)
 
-# box and whiskey plot w/class
+# box and whisker plot w/class
 x <- df[,3:9]
 y <- df[,1]
 featurePlot(x=x, y=y, plot="box")
@@ -74,7 +78,8 @@ featurePlot(x=x, y=y, plot="box")
 # Notice, that they are multiple rows with the same brand name. This could be problematic. Let's take a look at the unique values.
 classes <- unique(df$brand, incomparables = FALSE)
 uids <- unique(df$id, incomparables = FALSE)
-
+print(classes)
+length(uids)
 # get the count of the unique values for pizza brand
 table(df$brand)
 
@@ -83,6 +88,9 @@ df <- df[c(-2)]
 
 ###### perhaps new dataframe with joining factor and id as row.names as shown in example
 
+#############################################################
+## Principal Component Analysis 
+#############################################################
 
 ##### PCA Method 1 using caret
 # pre-processing PCA using caret
@@ -103,9 +111,7 @@ cor(df)
 pizza.pca <-PCA(df, scale.unit=TRUE, graph=TRUE)
 
 #############################################################
-
 ## Hierarchical Clustering
-
 #############################################################
 
 ### agglomerative 
