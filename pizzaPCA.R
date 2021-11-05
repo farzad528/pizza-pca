@@ -1,12 +1,22 @@
 # load packages
+install.packages("ggplot2")
+install.packages("factoextra")
+install.packages("FactoMineR")
+install.packages("corrplot")
+install.packages("e1071")
+install.packages("lattice")
+install.packages("cluster")
+install.packages("MASS")
 library(ggplot2)
 library(factoextra)
 library(FactoMineR)
 library(corrplot)
 library(e1071)
+library(lattice)
 library(caret)
 library(cluster)
 library(MASS)
+
 
 #############################################################
 ## Data Visualization
@@ -14,6 +24,12 @@ library(MASS)
 
 # load dataset
 df <- read.csv("Pizza.csv")
+
+brand*id <-paste(df$brand, df$id)
+brandid <- paste(df$brand, df$id)
+brandid <- paste(df$brand, df$id, sep="")
+df <- cbind(df, brandid)
+row.names(df) <- df$brandid 
 
 # summarize data
 summary(df)
@@ -92,23 +108,22 @@ df <- df[c(-2)]
 ## Principal Component Analysis 
 #############################################################
 
-##### PCA Method 1 using caret
-# pre-processing PCA using caret
-preprocessParams <- preProcess(df, method=c("center", "scale", "pca"))
-# summarize transform parameters
-print(preprocessParams)
-# transform the dataset using the parameters
-transformed <- predict(preprocessParams, df)
-# summarize the transformed dataset
-summary(transformed)
+df <- read.csv("Pizza.csv")
 
-
-##### PCA Method 2
 # drop id and brand
-df <- df[c(-1)]
-cor(df)
-# DO NOT RUN - this code crashes in Rstudio for some reason
-pizza.pca <-PCA(df, scale.unit=TRUE, graph=TRUE)
+df.min <- df[c(-2)]
+df.min <- df.min[c(-1)]
+cor(df.min) #conduct PCA on correlation matrix to create variables on commensurate scale
+pizza.pca <-PCA(df.min, scale.unit=TRUE, graph=TRUE)
+
+pizza.pca$eig #print eigenvalues
+fviz_eig(pizza.pca) #Scree plot
+
+pizza.pca$var #prints coord, cor, cos2 and contrib-eigenvectors are coord/sqrt(eigenvalue)
+pizza.pca$ind$coord #individuals expressed by PCAs
+fviz_pca_var(pizza.pca, col.var="cos2") #correlation circle with cos2
+fviz_pca_biplot(pizza.pca, col.var="cos2") #coordinates of individuals in PCA space and correlations between PCA and variables
+
 
 #############################################################
 ## Hierarchical Clustering

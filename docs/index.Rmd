@@ -180,5 +180,60 @@ table(df$brand)
 Notice, that they are ids that are clearly duplicated which could cause a problem in our dataset. They are 291 unique ids but 300 observations in our dataset. 
 
 ## Principal Component Analysis
+Principal Component Analysis (PCA) reduces the dimensions of a dataset while maintaining variability. To accomplish this, we replace existing variables with new ones that are a linear combination of the originals. The new y-axis is perpendicular to the new x-axis and the first PCA is a linear combo of the original and the second PCA is orthogonal. PCA thus takes advantage of correlation in the dataset to reduce the dataset.
+                                                    
+A loading is the correlation between a variable in the original dataset and a principal component. It tells how much information is common between them. A positive value means the two variables increase or decrease together while negative values indicate they performance in an opposite manner.
+
+#### Load Dataset
+``` {r cache=TRUE}
+df <- read.csv("../Pizza.csv")
+```
+
+
+#### Drop Id and Brand
+Let's drop ID and Brand since we won't need this for our PCA analysis.
+``` {r cache=TRUE}
+df.min <- df[c(-2)]
+df.min <- df.min[c(-1)]
+```
+
+#### Correlations
+A loading is the correlation between a variable in the original dataset and a principal component. It tells how much information is common between them. A positive value means the two variables increase or decrease together while negative values indicate they performance in an opposite manner.
+``` {r cache=TRUE}
+cor(df.min) #conduct PCA on correlation matrix to create variables on commensurate scale
+```
+
+#### PCA Algorithm
+The following PCA plot shows the variables factors individual contributions to the plan construction. In essence, it illustrates how each variable from the samples will map on the PCA plane. Carb is the only variable with a negative impact on dimension 1 and ash, protein, and moisture have a negative impact on dimension 2, and all to the degree to which the arrow shows. Thus, the angle between the vectors is an approximation of the correlation between the variables. We can see where there is a relatively small angle, which means they are positively correlated.
+``` {r cache=TRUE}
+pizza.pca <-PCA(df.min, scale.unit=TRUE, graph=TRUE)
+```
+
+#### Eigenvalues
+The eigenvalues help illustrate the amount of variation and are used to calculate the eigenvectors (i.e., the principal components) for the PCA mapping. Eigenvalues help determine the magnitude of the eigenvectors. The amount of variance each accounts for is included in the table below with this variance plotted on the Scree plot.
+``` {r cache=TRUE}
+pizza.pca$eig #print eigenvalues
+```
+
+#### Scree Plot
+The Scree plot gives the variability represented by each of the principal components. While 3 is more ideal number of principal components, with 5 we still resulted in a favorable scree plot with an ideal elbow bent plot.
+``` {r cache=TRUE}
+fviz_eig(pizza.pca) #Scree plot
+```
+
+#### Correlation Circle
+The correlation circle projects the variables into the principal component space. Correlation circles give a visual sense of how the variables and the principal components fit together. The length of the vector explains the amount of the variability and that variable is explained by the first two principal components. In this case, the first principal component is about the total scores across the pizza metrics. The second is about the pizza’s relative performance.
+``` {r cache=TRUE}
+fviz_pca_var(pizza.pca, col.var="cos2") #correlation circle with cos2
+```
+
+#### Biplot
+Biplots graph the original data. Biplot gives a low dimensional representation of the data using the first two principal components as the transformed space. A vector is included for each original variable. Using the graph, we can see the correlation between variables by examining the measure of the angle between them and the correlation between each variable and each of the principal components represented. We can also see how the transformed data points relate to the principal components, the relative differences between the data points in the transformed space, and the amount of the variability in the individual points explained by the first two principal components. In the obtained Biplot, the variables are represented as vectors and the observations as the names of each Pizza attribute. The distance between the attributes represents the similarity between them. Attributes that are closer have a similar profile or category.
+``` {r cache=TRUE}
+fviz_pca_biplot(pizza.pca, col.var="cos2") #coordinates of individuals in PCA space and correlations between PCA and variables
+```
+
+#### Conclusion
+In this case with the pizza data, there are some outliers but for the most part, pizzas felt into one of a few identifiable “clusters”. These groups on the plot indicate different brands the samples are from. High carb pizzas likely belong to brand G while high fat and sodium pizzas belong to brand A. Thus, the pizzas can be identified for the performance against each other in the many variables and in relation to other brands.
 
 ## Clustering
