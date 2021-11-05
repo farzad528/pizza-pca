@@ -237,3 +237,71 @@ fviz_pca_biplot(pizza.pca, col.var="cos2") #coordinates of individuals in PCA sp
 In this case with the pizza data, there are some outliers but for the most part, pizzas felt into one of a few identifiable “clusters”. These groups on the plot indicate different brands the samples are from. High carb pizzas likely belong to brand G while high fat and sodium pizzas belong to brand A. Thus, the pizzas can be identified for the performance against each other in the many variables and in relation to other brands.
 
 ## Clustering
+Let's take a look at kmeans, agglomerative, and divisive clustering on our dataset.
+
+### Kmeans Clustering
+#### Load Dataset
+First, we load the data set. This is the original dataset obtained from data.world with no modifications done by the team. We will complete those which are necessary directly within R.
+``` {r cache=TRUE}
+df <- read.csv("../Pizza.csv", stringsAsFactors = TRUE)
+```
+
+#### Drop Id and Brand
+As R has some difficulty dealing with rows with duplicate names (the brand identifiers in our case) it is necessary to clean the data and drop the “variables” we don’t need to analyze. These are the informational variables ‘brand’ and ‘id’.
+``` {r cache=TRUE}
+df <- df[c(-1, -2)]
+```
+
+#### Normalize Data
+Moving forward, we need to normalize our data if we are to conduct a bona fide k-means clustering analysis.  Some of our data points are of a very large magnitude and without normalization to get them all on to the same scale the algorithm would fail to work properly.
+``` {r cache=TRUE}
+normalized.data <- scale(df)
+```
+
+#### Calculate Distances
+We convert this new normalization to a data frame that can be used for analysis.Here we are calculating the Euclidean distances so we can get a good visual representation of the data as a matrix, and finally, a heat map.
+``` {r cache=TRUE}
+# change type to dataframe
+newdf<-data.frame(normalized.data)
+# Calculate distances
+dist.pizza<-get_dist(newdf, method="euclidean")
+# look at the heatmap of the data as a matrix
+fviz_dist(dist.pizza)
+```
+
+#### Kmeans Algorithm
+Now we will set the random seed for the purposes of this report to guarantee it is the same each time the code is run and begin the clustering analysis. Based on a comparison of the Within Cluster Sum of Squares (WCSS) and Between Cluster Sum of Squares (BCSS), we have decided to chose the amount of (k) clusters as k = 3. The best WCSS and BCSS came with 9 clusters, but this would make the analysis redundant and unnecessary as each of the 9 brands would essentially fall into their own cluster.  Choosing from 9 brands was the main issue in the first place.
+``` {r cache=TRUE}
+# set seed to guarantee reproducibility
+set.seed(99) 
+# centers is the #### number of clusters, nstart is the number of times you want the algorithm to run. 
+PizzaCluster<-kmeans(newdf,centers=3,nstart=1)
+```
+
+#### Examine Results
+Here we can see that the WCSS is 530 and the BCSS is 1563. These numbers are a significant improvement over an analysis with 2 clusters, and can give the consumer a relatively simple choice of pizza, as 9 brands are reduced into 3 groups.
+``` {r cache=TRUE}
+#examine results
+str(PizzaCluster)
+```
+
+#### Plot Results
+The k-means result plot gives a good visual representation of where the data falls when grouped into the 3 clusters based on the 7 content variables from the original dataset.
+``` {r cache=TRUE}
+#plot results
+plot(newdf,col=PizzaCluster$cluster) 
+# add the centers to your plot
+points(PizzaCluster$centers, col=1:2,pch=8)
+```
+
+#### Evaluate Results
+To see exactly which brands fall into which cluster, we reload the original dataset with the ‘brand’ variable and transpose the corresponding cluster number onto it. What results is a new data frame complete with brand identifier and cluster number. Here is a sample:
+``` {r cache=TRUE}
+##Add cluster identifier to dataframe to see where the clusters fall
+#Reload Dataset to see brands again
+df <- read.csv("../Pizza.csv", stringsAsFactors = TRUE)
+kmeans_pizza_df <- data.frame(Cluster = PizzaCluster$cluster, df)
+head(kmeans_pizza_df)
+```
+
+## Agglomerative Clustering 

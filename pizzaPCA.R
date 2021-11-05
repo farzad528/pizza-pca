@@ -129,6 +129,8 @@ fviz_pca_biplot(pizza.pca, col.var="cos2") #coordinates of individuals in PCA sp
 ## Hierarchical Clustering
 #############################################################
 
+
+
 ### agglomerative 
 # load dataset
 df <- read.csv("Pizza.csv", stringsAsFactors = TRUE)
@@ -266,7 +268,9 @@ fviz_dist(pizza.coph)
 # correlation between dendrogram distances and euclidean distances
 cor(get_dist(newdf, method="euclidean"),pizza.coph)
 
-### kmeans
+#############################################################
+## Kmeans Clustering
+#############################################################
 # load dataset
 df <- read.csv("Pizza.csv", stringsAsFactors = TRUE)
 
@@ -280,18 +284,32 @@ normalized.data <- scale(df)
 newdf<-data.frame(normalized.data)
 # Calculate distances
 dist.pizza<-get_dist(newdf, method="euclidean")
+
 #look at the data as a matrix
-as.matrix(dist.pizza) 
+as.matrix(dist.pizza)
+
 # look at the heatmap of the data as a matrix
 fviz_dist(dist.pizza) 
+
 # set seed to guarantee reproducibility
 set.seed(99) 
-# centers is the #### number of clusters, nstart is the number of times you want the algorithm to run. 
-PizzaCluster<-kmeans(newdf,centers=2,nstart=1)
+
+# centers is the number of clusters, nstart is the number of times you want the algorithm to run. 
+PizzaCluster<-kmeans(newdf,centers=3,nstart=1)
+
 #examine your results
 str(PizzaCluster) 
+
 #plot your results
 plot(newdf,col=PizzaCluster$cluster) 
+
 # add the centers to your plot
 points(PizzaCluster$centers, col=1:2,pch=8) 
+
+###Add cluster identifier to dataframe to see where the clusters fall
+##Reload Dataset to see brands again
+df <- read.csv("Pizza.csv", stringsAsFactors = TRUE)
+kmeans_pizza_df <- data.frame(Cluster = PizzaCluster$cluster, df)
+head(kmeans_pizza_df)
+
 
