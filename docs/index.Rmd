@@ -37,7 +37,7 @@ The purpose of this exercise was three-fold:
 
 1. The dataset was overall a clean multivariate normally distributed with no outliers, null values, and little correlation between independent variables. We did have to convert 'brand' from numeric to factor since it was categorical data.
 
-2. The PCA found that the amount of variability captured in two principal components was 94%.
+2. The PCA found that the amount of variability captured in two principal components was 92%.
 
 3. Clustering with kmeans provided 3 clusters to be the best fit while agglomerative provided 4 clusters to be the best fit. The cophenetic distance between dendrogram distances and euclidean distances was 0.919.
 
@@ -224,7 +224,7 @@ pizza.pca$eig #print eigenvalues
 ```
 
 #### Scree Plot
-The Scree plot gives the variability represented by each of the principal components. While 3 is more ideal number of principal components, with 5 we still resulted in a favorable scree plot with an ideal elbow bent plot.
+The Scree plot gives the variability represented by each of the principal components. While 3 is more ideal number of principal components, with 7 we still resulted in a favorable scree plot with an ideal elbow bent plot.
 ``` {r cache=TRUE}
 fviz_eig(pizza.pca) #Scree plot
 ```
