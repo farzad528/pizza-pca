@@ -313,7 +313,7 @@ head(kmeans_pizza_df)
 ```
 
 ### Agglomerative Clustering 
-For agglomerative clustering, we'll reuse many parts of the code we applied for kmeans but apply the agglomerative clustering algorithm instead.  Hierarchical
+For agglomerative clustering, we'll reuse many parts of the code we applied for kmeans but apply the agglomerative clustering algorithm instead.
 ``` {r cache=TRUE}
 df <- read.csv("../Pizza.csv", stringsAsFactors = TRUE)
 ```
