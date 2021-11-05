@@ -7,6 +7,7 @@ install.packages("e1071")
 install.packages("lattice")
 install.packages("cluster")
 install.packages("MASS")
+install.packages("purrr")
 library(ggplot2)
 library(factoextra)
 library(FactoMineR)
@@ -16,6 +17,9 @@ library(lattice)
 library(caret)
 library(cluster)
 library(MASS)
+library(purrr)
+library(dplyr)
+library(clValid)
 
 
 #############################################################
@@ -168,8 +172,8 @@ map_dbl(m, ac)
 # visualize cluster dendrogram
 fviz_dend(hc)
 
-hc$merge
-hc$height
+head(hc$merge, n=10)
+head(hc$height, n=10)
 
 # visualize the cutree
 # first: plot
@@ -187,13 +191,18 @@ result_cluster <- cutree(hc, h =4)
 result_cluster
 length(unique(result_cluster))
 
+#add additional column
+df_cl <- mutate(newdf, cluster =result_cluster)
+# report how many items in each cluster
+count(df_cl, cluster)
+
 # optimum number of clusters
 fviz_nbclust(newdf, FUN = hcut, method = "wss")
 
 # dunn index
 install.packages('clValid', dependencies = TRUE)
 suppressPackageStartupMessages(library(clValid))
-result_cluster <- cutree(hc, k=2)
+result_cluster <- cutree(hc, k=4)
 dunn(get_dist(normalized.data, method = "euclidean"), result_cluster)
 
 # examine and analyze clusters

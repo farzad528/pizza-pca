@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Executive Summary
 
-Our team includes members with various backgrounds including, energy, technology, aeronautics, and military services. One thing we all have in common is a love for food. We decided to use our knowledge of data analytics to perform a PCA and Clustering analysis on one of our most common favorite foods, pizza. 
+Our team includes members with various backgrounds including, energy, technology, aeronautics, and military services. One thing we all have in common is a love for food. We decided to use our knowledge of data analytics to perform a PCA and Cluster analysis on one of our most common favorite foods, pizza. 
 
 The dataset source comes from [dataworld](https://data.world/sdhilip/pizza-datasets).The business problem we are trying to solve is: 
 
@@ -37,9 +37,9 @@ The purpose of this exercise was three-fold:
 
 1. The dataset was overall a clean multivariate normally distributed with no outliers, null values, and little correlation between independent variables. We did have to convert 'brand' from numeric to factor since it was categorical data.
 
-2. The PCA found that the amount of variability in the dataset was good.
+2. The PCA found that the amount of variability captured in two principal components was 94%.
 
-3. Clustering with Kmeans had good scores when the number of clusters approximated those of the types of pizza, although the evaluation metrics (silhouette and inertia) are low. In general, the algorithms for clustering don't seem to clearly find similar object classes, without a priori knowledge of them (e.g., pizza types). 
+3. Clustering with kmeans provided 3 clusters to be the best fit while agglomerative provided 4 clusters to be the best fit. The cophenetic distance between dendrogram distances and euclidean distances was 0.919.
 
 ## Descriptive Statistics
 #### Load Packages
@@ -49,9 +49,13 @@ library(factoextra)
 library(FactoMineR)
 library(corrplot)
 library(e1071)
+library(lattice)
 library(caret)
 library(cluster)
 library(MASS)
+library(purrr)
+library(dplyr)
+library(clValid)
 ```
 
 #### Load Dataset
@@ -143,6 +147,7 @@ We took a look at the correlations when summarizing our data, let's now create a
 # multivariate, lets try correlation plot
 corrplot(correlations, method="circle")
 ```
+
 A scatter plot plots two variables together showing the relationship between the two.Let's create a scatter plot for all pairs of attributes in our dataset. We can also view a scatter plot matrix colored by class/brand.
 ``` {r cache=TRUE}
 # need to convert classes to categorical factors 
@@ -152,6 +157,7 @@ pairs(df)
 # scatter plot matrix and w/class
 pairs(brand~., data=df, col=df$brand)
 ```
+
 Similarly, let's create a density plot by class to review the density distribution. 
 ``` {r cache=TRUE}
 # density plot w/class
@@ -160,6 +166,7 @@ y <- df[,1]
 scales <- list(x=list(relation="free"), y=list(relation="free"))
 featurePlot(x=x, y=y, plot="density", scales=scales)
 ```
+
 Lastly, let's review the boxplot distriubtions of each attribute by class value. This can give us a different perspective of how each attribute relates to the class value.
 ``` {r cache=TRUE}
 # box and whisker plot w/class
@@ -177,6 +184,7 @@ length(uids)
 # get the count of the unique values for pizza brand
 table(df$brand)
 ```
+
 Notice, that they are ids that are clearly duplicated which could cause a problem in our dataset. They are 291 unique ids but 300 observations in our dataset. 
 
 ## Principal Component Analysis
@@ -304,4 +312,108 @@ kmeans_pizza_df <- data.frame(Cluster = PizzaCluster$cluster, df)
 head(kmeans_pizza_df)
 ```
 
-## Agglomerative Clustering 
+### Agglomerative Clustering 
+For agglomerative clustering, we'll reuse many parts of the code we applied for kmeans but apply the agglomerative clustering algorithm instead.  Hierarchical
+``` {r cache=TRUE}
+df <- read.csv("../Pizza.csv", stringsAsFactors = TRUE)
+```
+
+#### Drop Id and Brand
+``` {r cache=TRUE}
+df <- df[c(-1, -2)]
+```
+
+#### Normalize Data
+``` {r cache=TRUE}
+normalized.data <- scale(df)
+```
+
+#### Calculate Distances
+``` {r cache=TRUE}
+# change type to dataframe
+newdf<-data.frame(normalized.data)
+# Calculate distances
+dist.pizza<-get_dist(newdf, method="euclidean")
+# visualize to find any outliers
+fviz_dist(dist.pizza)
+```
+
+#### Agglomerative Clustering Algoirthm
+Let's carry out the agglomerative clustering here. We use different methods to assess the clustering. We used the agnes function to get the agglomerative coefficient, which measures the amount of clustering structure found (values closer to 1 suggest strong clustering structure).
+``` {r cache=TRUE}
+# carry out hierarchical clustering
+hc <- hclust(dist.pizza)
+# Compute with agnes
+hc2 <- agnes(newdf, method="complete")
+# compute agglomerative coefficient
+hc2$ac
+```
+
+##### Evaluate methods 
+This allows us to find certain hierarchial clustering methods that can identify strong clustering structures. We find that Ward's method is the strongest.
+``` {r cache=TRUE}
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+# function to compute coefficient
+ac <- function(x) {
+  agnes(newdf, method = x)$ac
+}
+map_dbl(m, ac)
+```
+
+##### Dendrogram
+A dendrogram is a branching diagram that represents the relationships of similarity among a group of entities. We can also view the merge and height values.
+``` {r cache=TRUE}
+fviz_dend(hc)
+
+head(hc$merge, n=10)
+head(hc$height, n=10)
+```
+
+Let's plot the dendrogram and create superimpose rectangular compartments for each cluster on the tree. We can also draw the cut line based on height.
+``` {r cache=TRUE}
+plot(hc)
+# then draw superimpoes rectangular compartments for each cluster on the tree
+rect.hclust(hc, k=4, border = 2:6)
+
+# can draw th cut line 
+abline(h=3, col='yellow')
+```
+
+Let's now find the length of the unique clusters. 
+``` {r cache=TRUE}
+# cut the tree by number of cluster: k
+result_cluster_k <- cutree(hc, k=4)
+# cut the tree by height: h 
+result_cluster <- cutree(hc, h=4)
+length(unique(result_cluster))
+```
+
+Let's take a look at how many items are in each cluster.
+``` {r cache=TRUE}
+#add additional column
+df_cl <- mutate(newdf, cluster =result_cluster)
+# report how many items in each cluster
+count(df_cl, cluster)
+```
+
+#### Examine Results
+Now we can examine the results and find the optimum number of clusters and how it relates to our results.Let's use the cophenetic distance, elbow method (WSS), and dunn index.
+``` {r cache=TRUE}
+# optimum number of clusters
+fviz_nbclust(newdf, FUN = hcut, method = "wss")
+# dunn index
+result_cluster <- cutree(hc, k=4)
+dunn(get_dist(normalized.data, method = "euclidean"), result_cluster)
+#plot clusters
+plot(newdf, col=result_cluster_k)
+# distances from the dendrogram
+pizza.coph <- cophenetic(hc)
+# visualize dengrogram distances with a heatmap
+fviz_dist(pizza.coph)
+# correlation between dendrogram distances and euclidean distances
+cor(get_dist(newdf, method="euclidean"),pizza.coph)
+```
+
+#### Conclusion
+Clustering showed to be a very useful tool in the unsupervised learning. That being said, we realized a number of isses that arose in clustering.In summary, we found that in hiearchical agglomerative clustering was best when the variables are separated into 4 clusters. 
