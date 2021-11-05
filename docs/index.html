@@ -267,7 +267,7 @@ div.tocify {
 <ol style="list-style-type: decimal">
 <li><p>The dataset was overall a clean multivariate normally distributed with no outliers, null values, and little correlation between independent variables. We did have to convert ‘brand’ from numeric to factor since it was categorical data.</p></li>
 <li><p>The PCA found that the amount of variability captured in two principal components was 94%.</p></li>
-<li><p>Clustering with Kmeans had good scores when the number of clusters approximated those of the types of pizza, although the evaluation metrics (silhouette and inertia) are low. In general, the algorithms for clustering don’t seem to clearly find similar object classes, without a priori knowledge of them (e.g., pizza types).</p></li>
+<li><p>Clustering with kmeans provided 3 clusters to be the best fit while agglomerative provided 4 clusters to be the best fit. The cophenetic distance between dendrogram distances and euclidean distances was 0.919.</p></li>
 </ol>
 </div>
 </div>
@@ -728,6 +728,10 @@ fviz_dist(pizza.coph)</code></pre>
 <pre class="r"><code># correlation between dendrogram distances and euclidean distances
 cor(get_dist(newdf, method=&quot;euclidean&quot;),pizza.coph)</code></pre>
 <pre><code>## [1] 0.9188701</code></pre>
+</div>
+<div id="conclusion-1" class="section level4">
+<h4>Conclusion</h4>
+<p>Clustering showed to be a very useful tool in the unsupervised learning. That being said, we realized a number of isses that arose in clustering.In summary, we found that in hiearchical agglomerative clustering was best when the variables are separated into 4 clusters.</p>
 </div>
 </div>
 </div>
